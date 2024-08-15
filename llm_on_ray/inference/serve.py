@@ -131,6 +131,11 @@ def main(argv=None):
     parser.add_argument(
         "--max_batch_size", default=None, type=int, help="The max batch size for dynamic batching."
     )
+    parser.add_argument(
+        "--new_deployment",
+        action="store_true",
+        help="Whether to override the previous deployment.",
+    )
 
     # Print help if no arguments were provided
     if len(sys.argv) == 1:
@@ -155,10 +160,14 @@ def main(argv=None):
         # provide OpenAI compatible api to run LLM models
         # all models are served under the same URL and then accessed
         # through model_id, so it needs to pass in a unified URL.
+        # if new_deployment is True, it will deploy each model separately
+        # such that endpoint url will be "http://host:port/{route_prefix}/v1".
+        # if new_deployment is False, it will deploy all models under the same URL.
+        # such that endpoint url will be "http://host:port/v1".
         host = "127.0.0.1" if args.serve_local_only else "0.0.0.0"
         print("Service is running with deployments:" + str(deployments))
         print("Service is running models:" + str(model_list))
-        openai_serve_run(deployments, model_list, host, "/", args.port, args.max_ongoing_requests)
+        openai_serve_run(deployments, model_list, host, "/", args.port, args.max_ongoing_requests, new_deployment=args.new_deployment)
 
     msg = "Service is deployed successfully."
     if args.keep_serve_terminal:
