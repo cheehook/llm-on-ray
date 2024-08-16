@@ -38,7 +38,7 @@ from llm_on_ray.inference.api_openai_backend.query_client import RouterQueryClie
 from llm_on_ray.inference.api_openai_backend.router_app import Router, router_app
 
 
-def router_application(deployments, model_list, max_ongoing_requests):
+def router_application(deployments, model_list, max_ongoing_requests, max_num_seqs):
     """Create a Router Deployment.
 
     Router Deployment will point to a Serve Deployment for each specified base model,
@@ -68,11 +68,10 @@ def router_application(deployments, model_list, max_ongoing_requests):
         ),  # Maximum backlog for a single replica
     )(serve.ingress(router_app)(Router))
 
-    return RouterDeployment.bind(merged_client)
+    return RouterDeployment.bind(merged_client, model_list, max_num_seqs)
 
-
-def openai_serve_run(deployments, model_list, host, route_prefix, port, max_ongoing_requests, new_deployment):
-    router_app = router_application(deployments, model_list, max_ongoing_requests)
+def openai_serve_run(deployments, model_list, host, route_prefix, port, max_ongoing_requests, max_num_seqs, new_deployment):
+    router_app = router_application(deployments, model_list, max_ongoing_requests, max_num_seqs)
     
     if new_deployment:
         for model_id, infer_conf in model_list.items():
