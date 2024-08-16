@@ -70,16 +70,21 @@ def router_application(deployments, model_list, max_ongoing_requests, max_num_se
 
     return RouterDeployment.bind(merged_client, model_list, max_num_seqs)
 
-
-def openai_serve_run(
-    deployments, model_list, host, route_prefix, port, max_ongoing_requests, max_num_seqs
-):
+def openai_serve_run(deployments, model_list, host, route_prefix, port, max_ongoing_requests, max_num_seqs, new_deployment):
     router_app = router_application(deployments, model_list, max_ongoing_requests, max_num_seqs)
+    
+    if new_deployment:
+        for model_id, infer_conf in model_list.items():
+            print("deploy model: ", model_id)
+            route_prefix = infer_conf.route_prefix
+            deployment_name = infer_conf.name
+    else:
+        deployment_name = "router"
 
     serve.start(http_options={"host": host, "port": port})
     serve.run(
         router_app,
-        name="router",
+        name=deployment_name,
         route_prefix=route_prefix,
     ).options(
         stream=True,
